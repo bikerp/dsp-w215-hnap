@@ -11,6 +11,10 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "Pavel Zelenka",
+  "repository" :
+  { "type" : "git"
+  , "url" : "https://github.com/bikerp/dsp-w215-hnap.git"
+  },
+  "author": "bikerp",
   "license": "MIT"
 }
