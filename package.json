@@ -1,0 +1,16 @@
+{
+  "name": "hnap",
+  "version": "1.0.0",
+  "description": "Reads power consumption and temperature from D-Link DSP-W215",
+  "main": "app.js",
+  "dependencies": {
+    "then-request": "latest",
+    "xmldom": "^0.1.19"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Pavel Zelenka",
+  "license": "MIT"
+}
