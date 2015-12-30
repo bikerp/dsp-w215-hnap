@@ -8,7 +8,7 @@ var HNAP_METHOD = "POST";
 var HNAP_BODY_ENCODING = "UTF8";
 var HNAP_LOGIN_METHOD = "Login";
 
-var HNAP_AUTH = {URL:"", User: "", Pwd: "", Result: "", Challenge: "", PublicKey: "", Cookie: "", PrivateKey: ""};
+var HNAP_AUTH = {URL: "", User: "", Pwd: "", Result: "", Challenge: "", PublicKey: "", Cookie: "", PrivateKey: ""};
 
 exports.login = function (user, password, url) {
     HNAP_AUTH.User = user;
@@ -23,24 +23,28 @@ exports.login = function (user, password, url) {
             },
             body: requestBody(HNAP_LOGIN_METHOD, loginRequest())
         }).then(function (response) {
-                save_login_result(response.getBody(HNAP_BODY_ENCODING));
-                return processLogin(HNAP_LOGIN_METHOD);
+        save_login_result(response.getBody(HNAP_BODY_ENCODING));
+        return processLogin(HNAP_LOGIN_METHOD);
+    }).catch(function (err) {
+        console.log("error:", err);
     });
 };
 
 function processLogin(method) {
     return request(HNAP_METHOD, HNAP_AUTH.URL,
         {
-        headers: {
-            "Content-Type": "text/xml; charset=utf-8",
-            "SOAPAction": '"' + HNAP1_XMLNS + method + '"',
-            "HNAP_AUTH": getHnapAuth('"' + HNAP1_XMLNS + method + '"', HNAP_AUTH.PrivateKey),
-            "Cookie": "uid=" + HNAP_AUTH.Cookie
-        },
-        body: requestBody(method, loginParameters())
-    }).then(function (response) {
-        return;
-    });
+            headers: {
+                "Content-Type": "text/xml; charset=utf-8",
+                "SOAPAction": '"' + HNAP1_XMLNS + method + '"',
+                "HNAP_AUTH": getHnapAuth('"' + HNAP1_XMLNS + method + '"', HNAP_AUTH.PrivateKey),
+                "Cookie": "uid=" + HNAP_AUTH.Cookie
+            },
+            body: requestBody(method, loginParameters())
+        }).then(function (response) {
+        return response.statusCode;
+    }).catch(function (err) {
+        console.log("error:", err);
+    })
 }
 function save_login_result(body) {
     var doc = new DOMParser().parseFromString(body);
@@ -76,15 +80,17 @@ function commandParameters(module) {
 exports.sendCommand = function (method, responseElement, module) {
     return request(HNAP_METHOD, HNAP_AUTH.URL,
         {
-        headers: {
-            "Content-Type": "text/xml; charset=utf-8",
-            "SOAPAction": '"' + HNAP1_XMLNS + method + '"',
-            "HNAP_AUTH": getHnapAuth('"' + HNAP1_XMLNS + method + '"', HNAP_AUTH.PrivateKey),
-            "Cookie": "uid=" + HNAP_AUTH.Cookie
-        },
-        body: requestBody(method, commandParameters(module))
-    }).then(function (response) {
-        return readResponseValue(response.getBody(HNAP_BODY_ENCODING), responseElement)
+            headers: {
+                "Content-Type": "text/xml; charset=utf-8",
+                "SOAPAction": '"' + HNAP1_XMLNS + method + '"',
+                "HNAP_AUTH": getHnapAuth('"' + HNAP1_XMLNS + method + '"', HNAP_AUTH.PrivateKey),
+                "Cookie": "uid=" + HNAP_AUTH.Cookie
+            },
+            body: requestBody(method, commandParameters(module))
+        }).then(function (response) {
+        return readResponseValue(response.getBody(HNAP_BODY_ENCODING), responseElement);
+    }).catch(function (err) {
+        console.log("error:", err);
     });
 };
 

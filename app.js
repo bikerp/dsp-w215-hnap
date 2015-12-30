@@ -14,9 +14,10 @@ var LOGIN_PWD = "<PIN CODE>";
 var HNAP_URL = "http://192.168.1.128/HNAP1";
 var POLLING_INTERVAL = 10000;
 
-var login = soapclient.login(LOGIN_USER, LOGIN_PWD, HNAP_URL);
-
-login.done(function () {
+soapclient.login(LOGIN_USER, LOGIN_PWD, HNAP_URL).done(function (status) {
+    if (!status) {
+        throw "Login failed!";
+    }
     read();
 });
 
@@ -24,7 +25,7 @@ function read() {
     soapclient.sendCommand("GetCurrentPowerConsumption", "CurrentConsumption", 1).done(function (power) {
         soapclient.sendCommand("GetCurrentTemperature", "CurrentTemperature", 2).done(function (temperature) {
             console.log(new Date().toLocaleString(), power, temperature);
-            save(power,temperature);
+            save(power, temperature);
             setTimeout(function () {
                 read();
             }, POLLING_INTERVAL);
@@ -32,8 +33,8 @@ function read() {
     })
 }
 
-function save(power, temperature){
-    fs.writeFile(OUTPUT_FILE, new Date().toLocaleString()+";"+power+";"+temperature+"\r\n",{flag:"a"}, function(err){
-        if(err) throw err;
+function save(power, temperature) {
+    fs.writeFile(OUTPUT_FILE, new Date().toLocaleString() + ";" + power + ";" + temperature + "\r\n", {flag: "a"}, function (err) {
+        if (err) throw err;
     })
 }
