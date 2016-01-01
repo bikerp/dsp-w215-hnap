@@ -24,28 +24,12 @@ exports.login = function (user, password, url) {
             body: requestBody(HNAP_LOGIN_METHOD, loginRequest())
         }).then(function (response) {
         save_login_result(response.getBody(HNAP_BODY_ENCODING));
-        return processLogin(HNAP_LOGIN_METHOD);
+        return soapAction(HNAP_LOGIN_METHOD, "LoginResult", requestBody(HNAP_LOGIN_METHOD, loginParameters()));
     }).catch(function (err) {
         console.log("error:", err);
     });
 };
 
-function processLogin(method) {
-    return request(HNAP_METHOD, HNAP_AUTH.URL,
-        {
-            headers: {
-                "Content-Type": "text/xml; charset=utf-8",
-                "SOAPAction": '"' + HNAP1_XMLNS + method + '"',
-                "HNAP_AUTH": getHnapAuth('"' + HNAP1_XMLNS + method + '"', HNAP_AUTH.PrivateKey),
-                "Cookie": "uid=" + HNAP_AUTH.Cookie
-            },
-            body: requestBody(method, loginParameters())
-        }).then(function (response) {
-        return response.statusCode;
-    }).catch(function (err) {
-        console.log("error:", err);
-    })
-}
 function save_login_result(body) {
     var doc = new DOMParser().parseFromString(body);
     HNAP_AUTH.Result = doc.getElementsByTagName(HNAP_LOGIN_METHOD + "Result").item(0).firstChild.nodeValue;
@@ -56,28 +40,34 @@ function save_login_result(body) {
 }
 
 function requestBody(method, parameters) {
-    var str = "<?xml version=\"1.0\" encoding=\"utf-8\"?>" +
+    return "<?xml version=\"1.0\" encoding=\"utf-8\"?>" +
         "<soap:Envelope " +
         "xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\" " +
         "xmlns:xsd=\"http://www.w3.org/2001/XMLSchema\" " +
         "xmlns:soap=\"http://schemas.xmlsoap.org/soap/envelope/\">" +
         "<soap:Body>" +
-        "<" + method + " xmlns=\"";
-
-    str += HNAP1_XMLNS;
-
-    str += "\">" +
+        "<" + method + " xmlns=\"" + HNAP1_XMLNS + "\">" +
         parameters +
-        "</" + method + "></soap:Body></soap:Envelope>";
-    return str;
+        "</" + method + ">" +
+        "</soap:Body></soap:Envelope>";
 }
 
-function commandParameters(module) {
-    var param = "<ModuleID>" + module + "</ModuleID>";
-    return param;
+function moduleParameters(module) {
+    return "<ModuleID>" + module + "</ModuleID>";
+}
+
+function controlParameters(module, status) {
+    return moduleParameters(module) +
+        "<NickName>Socket 1</NickName><Description>Socket 1</Description>" +
+        "<OPStatus>" + status + "</OPStatus><Controller>1</Controller>";
+
 }
 
 exports.sendCommand = function (method, responseElement, module) {
+    return soapAction(method, responseElement, requestBody(method, moduleParameters(module)));
+};
+
+function soapAction(method, responseElement, body) {
     return request(HNAP_METHOD, HNAP_AUTH.URL,
         {
             headers: {
@@ -86,30 +76,43 @@ exports.sendCommand = function (method, responseElement, module) {
                 "HNAP_AUTH": getHnapAuth('"' + HNAP1_XMLNS + method + '"', HNAP_AUTH.PrivateKey),
                 "Cookie": "uid=" + HNAP_AUTH.Cookie
             },
-            body: requestBody(method, commandParameters(module))
+            body: body
         }).then(function (response) {
         return readResponseValue(response.getBody(HNAP_BODY_ENCODING), responseElement);
     }).catch(function (err) {
         console.log("error:", err);
     });
+}
+
+exports.on = function () {
+    return soapAction("SetSocketSettings", "SetSocketSettingsResult", requestBody("SetSocketSettings", controlParameters(1, true)));
+};
+
+exports.off = function () {
+    return soapAction("SetSocketSettings", "SetSocketSettingsResult", requestBody("SetSocketSettings", controlParameters(1, false)));
+};
+
+exports.consumption = function () {
+    return soapAction("GetCurrentPowerConsumption", "CurrentConsumption", requestBody("GetCurrentPowerConsumption", controlParameters(1, false)));
+};
+
+exports.temperature = function () {
+    return soapAction("GetCurrentTemperature", "CurrentTemperature", requestBody("GetCurrentTemperature", controlParameters(2, false)));
 };
 
 function loginRequest() {
-    var para = "<Action>request</Action>"
+    return "<Action>request</Action>"
         + "<Username>" + HNAP_AUTH.User + "</Username>"
         + "<LoginPassword></LoginPassword>"
         + "<Captcha></Captcha>";
-
-    return para;
 }
 
 function loginParameters() {
     var login_pwd = md5.hex_hmac_md5(HNAP_AUTH.PrivateKey, HNAP_AUTH.Challenge);
-    var para = "<Action>login</Action>"
+    return "<Action>login</Action>"
         + "<Username>" + HNAP_AUTH.User + "</Username>"
         + "<LoginPassword>" + login_pwd.toUpperCase() + "</LoginPassword>"
         + "<Captcha></Captcha>";
-    return para;
 }
 
 function getHnapAuth(SoapAction, privateKey) {

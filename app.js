@@ -10,20 +10,30 @@ var fs = require('fs');
 
 var OUTPUT_FILE = "result.txt";
 var LOGIN_USER = "admin";
-var LOGIN_PWD = "<PIN CODE>";
+var LOGIN_PWD = "PIN CODE";
 var HNAP_URL = "http://192.168.1.128/HNAP1";
-var POLLING_INTERVAL = 10000;
+var POLLING_INTERVAL = 60000;
 
 soapclient.login(LOGIN_USER, LOGIN_PWD, HNAP_URL).done(function (status) {
     if (!status) {
         throw "Login failed!";
     }
-    read();
+    if (status!="success") {
+        throw "Login failed!";
+    }
+    start();
 });
 
+function start(){
+    soapclient.on().done(function (result){
+      console.log(result);
+      read();
+    })
+}
+
 function read() {
-    soapclient.sendCommand("GetCurrentPowerConsumption", "CurrentConsumption", 1).done(function (power) {
-        soapclient.sendCommand("GetCurrentTemperature", "CurrentTemperature", 2).done(function (temperature) {
+    soapclient.consumption().done(function (power) {
+        soapclient.temperature().done(function (temperature) {
             console.log(new Date().toLocaleString(), power, temperature);
             save(power, temperature);
             setTimeout(function () {
