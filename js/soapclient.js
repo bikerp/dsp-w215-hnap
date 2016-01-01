@@ -60,12 +60,11 @@ function controlParameters(module, status) {
     return moduleParameters(module) +
         "<NickName>Socket 1</NickName><Description>Socket 1</Description>" +
         "<OPStatus>" + status + "</OPStatus><Controller>1</Controller>";
-
 }
 
-exports.sendCommand = function (method, responseElement, module) {
-    return soapAction(method, responseElement, requestBody(method, moduleParameters(module)));
-};
+function radioParameters(radio) {
+    return "<RadioID>" + radio + "</RadioID>";
+}
 
 function soapAction(method, responseElement, body) {
     return request(HNAP_METHOD, HNAP_AUTH.URL,
@@ -78,6 +77,7 @@ function soapAction(method, responseElement, body) {
             },
             body: body
         }).then(function (response) {
+        console.log(response.getBody(HNAP_BODY_ENCODING));
         return readResponseValue(response.getBody(HNAP_BODY_ENCODING), responseElement);
     }).catch(function (err) {
         console.log("error:", err);
@@ -93,12 +93,59 @@ exports.off = function () {
 };
 
 exports.consumption = function () {
-    return soapAction("GetCurrentPowerConsumption", "CurrentConsumption", requestBody("GetCurrentPowerConsumption", controlParameters(1, false)));
+    return soapAction("GetCurrentPowerConsumption", "CurrentConsumption", requestBody("GetCurrentPowerConsumption", moduleParameters(2)));
+};
+
+exports.totalConsumption = function () {
+    return soapAction("GetPMWarningThreshold", "TotalConsumption", requestBody("GetPMWarningThreshold", moduleParameters(2)));
 };
 
 exports.temperature = function () {
-    return soapAction("GetCurrentTemperature", "CurrentTemperature", requestBody("GetCurrentTemperature", controlParameters(2, false)));
+    return soapAction("GetCurrentTemperature", "CurrentTemperature", requestBody("GetCurrentTemperature", moduleParameters(3)));
 };
+
+exports.radioSettings = function () {
+    return soapAction("GetAPClientSettings", "GetAPClientSettingsResult", requestBody("GetAPClientSettings", radioParameters("RADIO_2.4GHz")));
+};
+
+exports.setPowerWarning = function () {
+    return soapAction("SetPMWarningThreshold", "SetPMWarningThresholdResult", requestBody("SetPMWarningThreshold", powerWarningParameters()));
+};
+
+exports.getPowerWarning = function () {
+    return soapAction("GetPMWarningThreshold", "GetPMWarningThresholdResult", requestBody("GetPMWarningThreshold", moduleParameters(2)));
+};
+
+exports.getTemperatureSettings = function () {
+    return soapAction("GetTempMonitorSettings", "GetTempMonitorSettingsResult", requestBody("GetTempMonitorSettings", moduleParameters(3)));
+};
+
+exports.setTemperatureSettings = function () {
+    return soapAction("SetTempMonitorSettings", "SetTempMonitorSettingsResult", requestBody("SetTempMonitorSettings", temperatureSettingsParameters(3)));
+};
+
+exports.getSiteSurvey = function () {
+    return soapAction("GetSiteSurvey", "GetSiteSurveyResult", requestBody("GetSiteSurvey", radioParameters("RADIO_2.4GHz")));
+};
+
+exports.triggerWirelessSiteSurvey = function () {
+    return soapAction("SetTriggerWirelessSiteSurvey", "SetTriggerWirelessSiteSurveyResult", requestBody("SetTriggerWirelessSiteSurvey", radioParameters("RADIO_2.4GHz")));
+};
+
+function temperatureSettingsParameters(module) {
+    return moduleParameters(module) +
+        "<NickName>TemperatureMonitor 3</NickName>" +
+        "<Description>Temperature Monitor 3</Description>" +
+        "<UpperBound>90</UpperBound>" +
+        "<LowerBound>Not Available</LowerBound>" +
+        "<OPStatus>false</OPStatus>";
+}
+function powerWarningParameters() {
+    return "<Threshold>28</Threshold>" +
+        "<Percentage>70</Percentage>" +
+        "<PeriodicType>Weekly</PeriodicType>" +
+        "<StartTime>1</StartTime>";
+}
 
 function loginRequest() {
     return "<Action>request</Action>"
