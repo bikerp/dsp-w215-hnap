@@ -2,6 +2,7 @@ var md5 = require('./hmac_md5');
 var request = require('then-request');
 var DOMParser = require('xmldom').DOMParser;
 var fs = require("fs");
+var AES = require('./AES');
 
 var HNAP1_XMLNS = "http://purenetworks.com/HNAP1/";
 var HNAP_METHOD = "POST";
@@ -104,7 +105,7 @@ exports.temperature = function () {
     return soapAction("GetCurrentTemperature", "CurrentTemperature", requestBody("GetCurrentTemperature", moduleParameters(3)));
 };
 
-exports.radioSettings = function () {
+exports.getAPClientSettings = function () {
     return soapAction("GetAPClientSettings", "GetAPClientSettingsResult", requestBody("GetAPClientSettings", radioParameters("RADIO_2.4GHz")));
 };
 
@@ -132,13 +133,89 @@ exports.triggerWirelessSiteSurvey = function () {
     return soapAction("SetTriggerWirelessSiteSurvey", "SetTriggerWirelessSiteSurveyResult", requestBody("SetTriggerWirelessSiteSurvey", radioParameters("RADIO_2.4GHz")));
 };
 
+exports.latestDetection = function () {
+    return soapAction("GetLatestDetection", "GetLatestDetectionResult", requestBody("GetLatestDetection", moduleParameters(2)));
+};
+
+exports.reboot = function () {
+    return soapAction("Reboot", "RebootResult", requestBody("Reboot", ""));
+};
+
+exports.isDeviceReady = function () {
+    return soapAction("IsDeviceReady", "IsDeviceReadyResult", requestBody("IsDeviceReady", ""));
+};
+
+exports.getModuleSchedule = function () {
+    return soapAction("GetModuleSchedule", "GetModuleScheduleResult", requestBody("GetModuleSchedule", moduleParameters(0)));
+};
+
+exports.getModuleEnabled = function () {
+    return soapAction("GetModuleEnabled", "GetModuleEnabledResult", requestBody("GetModuleEnabled", moduleParameters(0)));
+};
+
+exports.getModuleGroup = function () {
+    return soapAction("GetModuleGroup", "GetModuleGroupResult", requestBody("GetModuleGroup", groupParameters(0)));
+};
+
+exports.getScheduleSettings = function () {
+    return soapAction("GetScheduleSettings", "GetScheduleSettingsResult", requestBody("GetScheduleSettings", ""));
+};
+
+exports.setFactoryDefault = function () {
+    return soapAction("SetFactoryDefault", "SetFactoryDefaultResult", requestBody("SetFactoryDefault", ""));
+};
+
+exports.setFactoryDefault = function () {
+    return soapAction("SetFactoryDefault", "SetFactoryDefaultResult", requestBody("SetFactoryDefault", ""));
+};
+
+exports.getWLanRadios = function () {
+    return soapAction("GetWLanRadios", "GetWLanRadiosResult", requestBody("GetWLanRadios", ""));
+};
+
+exports.getInternetSettings = function () {
+    return soapAction("GetInternetSettings", "GetInternetSettingsResult", requestBody("GetInternetSettings", ""));
+};
+
+exports.setAPClientSettings = function () {
+    return soapAction("SetAPClientSettings", "SetAPClientSettingsResult", requestBody("SetAPClientSettings", APClientParameters()));
+};
+
+exports.settriggerADIC = function () {
+    return soapAction("SettriggerADIC", "SettriggerADICResult", requestBody("SettriggerADIC", ""));
+};
+
+function APClientParameters(group) {
+    return "<Enabled>true</Enabled>"+
+            "<RadioID>RADIO_2.4GHz</RadioID>"+
+        "<SSID>CiscoHome_ext</SSID>"+
+        "<MacAddress>C8:D7:19:4D:F9:F0</MacAddress>"+
+    "<ChannelWidth>0</ChannelWidth>"+
+    "<SupportedSecurity>"+
+    "<SecurityInfo>"+
+    "<SecurityType>WPA2-PSK</SecurityType>"+
+    "<Encryptions>"+
+    "<string>AES</string>"+
+    "</Encryptions>"+
+    "</SecurityInfo>"+
+    "</SupportedSecurity>"+
+        "<Key>"+AES.AES_Encrypt128("lotusnotes", HNAP_AUTH.PrivateKey)+"</Key>";
+}
+
+function testParameters(group) {
+    return "<ModuleGroupID>" + group + "</ModuleGroupID>";
+}
+
+function groupParameters(group) {
+    return "<ModuleGroupID>" + group + "</ModuleGroupID>";
+}
 function temperatureSettingsParameters(module) {
     return moduleParameters(module) +
         "<NickName>TemperatureMonitor 3</NickName>" +
         "<Description>Temperature Monitor 3</Description>" +
-        "<UpperBound>90</UpperBound>" +
+        "<UpperBound>80</UpperBound>" +
         "<LowerBound>Not Available</LowerBound>" +
-        "<OPStatus>false</OPStatus>";
+        "<OPStatus>true</OPStatus>";
 }
 function powerWarningParameters() {
     return "<Threshold>28</Threshold>" +
@@ -170,7 +247,9 @@ function getHnapAuth(SoapAction, privateKey) {
 }
 
 function readResponseValue(body, elementName) {
-    var doc = new DOMParser().parseFromString(body);
-    var node = doc.getElementsByTagName(elementName).item(0);
-    return (node) ? node.firstChild.nodeValue : "ERROR";
+    if(body && elementName) {
+        var doc = new DOMParser().parseFromString(body);
+        var node = doc.getElementsByTagName(elementName).item(0);
+        return (node) ? node.firstChild.nodeValue : "ERROR";
+    }
 }

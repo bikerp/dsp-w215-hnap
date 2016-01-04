@@ -10,8 +10,9 @@ var fs = require('fs');
 
 var OUTPUT_FILE = "result.txt";
 var LOGIN_USER = "admin";
-var LOGIN_PWD = "PIN CODE";
+var LOGIN_PWD = "160973";
 var HNAP_URL = "http://192.168.1.128/HNAP1";
+//var HNAP_URL = "http://192.168.0.60/HNAP1";
 var POLLING_INTERVAL = 60000;
 
 soapclient.login(LOGIN_USER, LOGIN_PWD, HNAP_URL).done(function (status) {
@@ -22,12 +23,14 @@ soapclient.login(LOGIN_USER, LOGIN_PWD, HNAP_URL).done(function (status) {
         throw "Login failed!";
     }
     start();
+    //read();
 });
 
 function start(){
-    soapclient.on().done(function (result){
+    soapclient.getInternetSettings().done(function (result){
+    //soapclient.on().done(function (result){
       console.log(result);
-      read();
+      //read();
     })
 }
 
