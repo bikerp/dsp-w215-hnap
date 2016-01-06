@@ -21,8 +21,15 @@ soapclient.login(LOGIN_USER, LOGIN_PWD, HNAP_URL).done(function (status) {
     if (status != "success") {
         throw "Login failed!";
     }
-    read();
+    start();
 });
+
+function start(){
+    soapclient.on().done(function (result){
+        console.log(result);
+        read();
+    })
+};
 
 function read() {
     soapclient.consumption().done(function (power) {
