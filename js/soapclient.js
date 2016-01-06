@@ -78,7 +78,6 @@ function soapAction(method, responseElement, body) {
             },
             body: body
         }).then(function (response) {
-        console.log(response.getBody(HNAP_BODY_ENCODING));
         return readResponseValue(response.getBody(HNAP_BODY_ENCODING), responseElement);
     }).catch(function (err) {
         console.log("error:", err);
@@ -165,10 +164,6 @@ exports.setFactoryDefault = function () {
     return soapAction("SetFactoryDefault", "SetFactoryDefaultResult", requestBody("SetFactoryDefault", ""));
 };
 
-exports.setFactoryDefault = function () {
-    return soapAction("SetFactoryDefault", "SetFactoryDefaultResult", requestBody("SetFactoryDefault", ""));
-};
-
 exports.getWLanRadios = function () {
     return soapAction("GetWLanRadios", "GetWLanRadiosResult", requestBody("GetWLanRadios", ""));
 };
@@ -186,24 +181,20 @@ exports.settriggerADIC = function () {
 };
 
 function APClientParameters(group) {
-    return "<Enabled>true</Enabled>"+
-            "<RadioID>RADIO_2.4GHz</RadioID>"+
-        "<SSID>CiscoHome_ext</SSID>"+
-        "<MacAddress>C8:D7:19:4D:F9:F0</MacAddress>"+
-    "<ChannelWidth>0</ChannelWidth>"+
-    "<SupportedSecurity>"+
-    "<SecurityInfo>"+
-    "<SecurityType>WPA2-PSK</SecurityType>"+
-    "<Encryptions>"+
-    "<string>AES</string>"+
-    "</Encryptions>"+
-    "</SecurityInfo>"+
-    "</SupportedSecurity>"+
-        "<Key>"+AES.AES_Encrypt128("lotusnotes", HNAP_AUTH.PrivateKey)+"</Key>";
-}
-
-function testParameters(group) {
-    return "<ModuleGroupID>" + group + "</ModuleGroupID>";
+    return "<Enabled>true</Enabled>" +
+        "<RadioID>RADIO_2.4GHz</RadioID>" +
+        "<SSID>My_Network</SSID>" +
+        "<MacAddress>XX:XX:XX:XX:XX:XX</MacAddress>" +
+        "<ChannelWidth>0</ChannelWidth>" +
+        "<SupportedSecurity>" +
+        "<SecurityInfo>" +
+        "<SecurityType>WPA2-PSK</SecurityType>" +
+        "<Encryptions>" +
+        "<string>AES</string>" +
+        "</Encryptions>" +
+        "</SecurityInfo>" +
+        "</SupportedSecurity>" +
+        "<Key>" + AES.AES_Encrypt128("password", HNAP_AUTH.PrivateKey) + "</Key>";
 }
 
 function groupParameters(group) {
@@ -247,7 +238,7 @@ function getHnapAuth(SoapAction, privateKey) {
 }
 
 function readResponseValue(body, elementName) {
-    if(body && elementName) {
+    if (body && elementName) {
         var doc = new DOMParser().parseFromString(body);
         var node = doc.getElementsByTagName(elementName).item(0);
         return (node) ? node.firstChild.nodeValue : "ERROR";
