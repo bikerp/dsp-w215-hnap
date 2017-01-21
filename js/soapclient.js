@@ -245,6 +245,7 @@ function readResponseValue(body, elementName) {
     if (body && elementName) {
         var doc = new DOMParser().parseFromString(body);
         var node = doc.getElementsByTagName(elementName).item(0);
-        return (node) ? node.firstChild.nodeValue : "ERROR";
+        // Check that we have children of node.
+        return (node && node.firstChild) ? node.firstChild.nodeValue : "ERROR";
     }
 }
